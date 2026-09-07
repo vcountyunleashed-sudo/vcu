@@ -1,0 +1,3119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover"
+>
+
+<meta name="theme-color" content="#101214">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<title>Ventura County CAD</title>
+
+
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
+/>
+
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
+/>
+
+
+<style>
+
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+
+html,
+body {
+
+    margin: 0;
+
+    width: 100%;
+    height: 100%;
+
+    overflow: hidden;
+
+    /* prevents the pull-to-refresh / rubber-band bounce that would
+       otherwise fight with a fixed, app-like mobile layout */
+    overscroll-behavior: none;
+
+    font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Arial,
+        sans-serif;
+
+    background: #101214;
+    color: white;
+
+}
+
+
+button,
+input,
+select {
+
+    /* iOS Safari auto-zooms the page when a focused form field has a
+       font-size under 16px - this keeps every field at 16px so typing
+       in the search box or opening a dropdown doesn't yank the zoom */
+    font-size: 16px;
+
+    touch-action: manipulation;
+
+}
+
+
+/* =========================================================
+   MAIN LAYOUT
+   ========================================================= */
+
+.app {
+
+    display: flex;
+
+    width: 100%;
+    height: 100%;
+
+}
+
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+
+.sidebar {
+
+    width: 390px;
+
+    min-width: 390px;
+
+    height: 100%;
+
+    background: #17191c;
+
+    border-right:
+        1px solid #303338;
+
+    display: flex;
+
+    flex-direction: column;
+
+    z-index: 1000;
+
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.header {
+
+    height: 68px;
+
+    padding:
+        0 18px;
+
+    padding-top:
+        env(safe-area-inset-top);
+
+    height:
+        calc(68px + env(safe-area-inset-top));
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    border-bottom:
+        1px solid #303338;
+
+}
+
+
+.logo {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 11px;
+
+}
+
+
+.logo-icon {
+
+    width: 38px;
+    height: 38px;
+
+    border-radius: 9px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    background: #292d32;
+
+    font-size: 19px;
+
+}
+
+
+.logo-title {
+
+    font-size: 15px;
+
+    font-weight: 700;
+
+}
+
+
+.logo-sub {
+
+    color: #858b93;
+
+    font-size: 10px;
+
+    margin-top: 2px;
+
+}
+
+
+.live {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    font-size: 10px;
+
+    color: #8f969e;
+
+}
+
+
+.live-dot {
+
+    width: 8px;
+    height: 8px;
+
+    border-radius: 50%;
+
+    background: #36c275;
+
+    box-shadow:
+        0 0 8px #36c275;
+
+}
+
+
+/* =========================================================
+   FILTERS
+   ========================================================= */
+
+.filters {
+
+    padding: 12px;
+
+    border-bottom:
+        1px solid #303338;
+
+}
+
+
+.search {
+
+    width: 100%;
+
+    padding:
+        10px 12px;
+
+    border:
+        1px solid #35393f;
+
+    background:
+        #101214;
+
+    color: white;
+
+    border-radius: 7px;
+
+    outline: none;
+
+    margin-bottom: 8px;
+
+}
+
+
+.filter-row {
+
+    display: flex;
+
+    gap: 7px;
+
+}
+
+
+select {
+
+    flex: 1;
+
+    padding: 9px;
+
+    border:
+        1px solid #35393f;
+
+    background: #24272b;
+
+    color: white;
+
+    border-radius: 7px;
+
+    outline: none;
+
+}
+
+
+/* =========================================================
+   STATISTICS
+   ========================================================= */
+
+.stats {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 7px;
+
+    padding: 10px 12px;
+
+}
+
+
+.stat {
+
+    background: #222529;
+
+    border:
+        1px solid #303338;
+
+    border-radius: 8px;
+
+    padding: 9px;
+
+}
+
+
+.stat-number {
+
+    font-size: 18px;
+
+    font-weight: 700;
+
+}
+
+
+.stat-label {
+
+    font-size: 9px;
+
+    color: #858b93;
+
+    margin-top: 2px;
+
+}
+
+
+/* =========================================================
+   LEGEND
+   ========================================================= */
+
+.legend {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+    padding: 0 12px 10px;
+
+    font-size: 9px;
+
+    color: #9aa0a7;
+
+}
+
+
+.legend-item {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 4px;
+
+}
+
+
+.legend-dot {
+
+    width: 9px;
+    height: 9px;
+
+    border-radius: 50%;
+
+    flex-shrink: 0;
+
+}
+
+
+/* =========================================================
+   INCIDENT LIST
+   ========================================================= */
+
+.list {
+
+    flex: 1;
+
+    overflow-y: auto;
+
+}
+
+
+.incident {
+
+    padding:
+        12px 14px;
+
+    border-bottom:
+        1px solid #282b2f;
+
+    cursor: pointer;
+
+    transition:
+        background .15s;
+
+}
+
+
+.incident:hover {
+
+    background: #222529;
+
+}
+
+
+.incident.active {
+
+    background: #282c31;
+
+    border-left:
+        3px solid #fff;
+
+    padding-left: 11px;
+
+}
+
+
+.incident-top {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    gap: 8px;
+
+    align-items: center;
+
+}
+
+
+.badge {
+
+    font-size: 9px;
+
+    padding:
+        3px 6px;
+
+    border-radius: 4px;
+
+    font-weight: 700;
+
+}
+
+
+.badge-vcfd {
+
+    background: #491d1d;
+
+    color: #ff7777;
+
+}
+
+
+.badge-chp {
+
+    background: #182c49;
+
+    color: #65a9ff;
+
+}
+
+
+.incident-type {
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    margin-top: 6px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+}
+
+
+.type-dot {
+
+    width: 8px;
+    height: 8px;
+
+    border-radius: 50%;
+
+    flex-shrink: 0;
+
+}
+
+
+.incident-location {
+
+    color: #a4aab1;
+
+    font-size: 11px;
+
+    margin-top: 5px;
+
+}
+
+
+.incident-meta {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    color: #707780;
+
+    font-size: 9px;
+
+    margin-top: 8px;
+
+}
+
+
+/* =========================================================
+   FEED STATUS
+   ========================================================= */
+
+.footer {
+
+    padding:
+        10px 13px;
+
+    padding-bottom:
+        calc(10px + env(safe-area-inset-bottom));
+
+    border-top:
+        1px solid #303338;
+
+    background: #141619;
+
+    font-size: 9px;
+
+    color: #747b83;
+
+}
+
+
+.feed {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    margin-top: 4px;
+
+}
+
+
+.feed-left {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 5px;
+
+}
+
+
+.feed-dot {
+
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+}
+
+
+.feed-ok {
+
+    background: #36c275;
+
+}
+
+
+.feed-bad {
+
+    background: #e34b4b;
+
+}
+
+
+/* =========================================================
+   MAP
+   ========================================================= */
+
+.map {
+
+    flex: 1;
+
+    position: relative;
+
+}
+
+
+#map {
+
+    width: 100%;
+    height: 100%;
+
+}
+
+
+.map-controls {
+
+    position: absolute;
+
+    z-index: 1000;
+
+    top:
+        calc(15px + env(safe-area-inset-top));
+
+    right:
+        calc(15px + env(safe-area-inset-right));
+
+    display: flex;
+
+    gap: 6px;
+
+}
+
+
+.map-button {
+
+    border:
+        1px solid #3a3e43;
+
+    background:
+        rgba(20,22,24,.94);
+
+    color: white;
+
+    padding:
+        9px 14px;
+
+    min-height: 42px;
+
+    display: flex;
+
+    align-items: center;
+
+    border-radius: 7px;
+
+    cursor: pointer;
+
+    font-size: 13px;
+
+}
+
+
+.map-button:hover {
+
+    background: #2a2d31;
+
+}
+
+
+/* =========================================================
+   POPUP
+   ========================================================= */
+
+.popup {
+
+    color: #222;
+
+    min-width: 200px;
+
+    max-width: 74vw;
+
+}
+
+
+.popup-title {
+
+    font-weight: 700;
+
+    font-size: 15px;
+
+    margin-bottom: 8px;
+
+}
+
+
+.popup-row {
+
+    font-size: 11px;
+
+    margin:
+        5px 0;
+
+}
+
+
+.popup-row strong {
+
+    font-weight: 700;
+
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media(max-width:800px) {
+
+    .sidebar {
+
+        width: 330px;
+
+        min-width: 330px;
+
+    }
+
+}
+
+
+/* Drag handle shown only on the mobile bottom-sheet layout */
+
+.sheet-handle {
+
+    display: none;
+
+    padding: 8px 0 4px;
+
+    text-align: center;
+
+    cursor: pointer;
+
+}
+
+
+.sheet-handle::after {
+
+    content: "";
+
+    display: inline-block;
+
+    width: 36px;
+    height: 4px;
+
+    border-radius: 3px;
+
+    background: #454a51;
+
+}
+
+
+@media(max-width:600px) {
+
+    html,
+    body {
+        width: 100%;
+        height: 100%;
+        height: 100dvh;
+        overflow: hidden;
+    }
+
+    .app {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        height: 100dvh;
+        display: block;
+    }
+
+    .map {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        height: 100dvh;
+    }
+
+    .sidebar {
+        position: fixed;
+        width: 100%;
+        min-width: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 1200;
+        height: min(82dvh, 760px);
+        max-height: 82dvh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border-right: none;
+        border-top: 1px solid #303338;
+        border-radius: 18px 18px 0 0;
+        box-shadow: 0 -6px 28px rgba(0,0,0,.45);
+        transform: translateY(calc(100% - 82px));
+        transition: transform .28s ease;
+        will-change: transform;
+    }
+
+    .sidebar.expanded {
+        transform: translateY(0);
+    }
+
+    /* Compact collapsed state: map stays the main screen. */
+    .sidebar:not(.expanded) .filters,
+    .sidebar:not(.expanded) .stats,
+    .sidebar:not(.expanded) .legend,
+    .sidebar:not(.expanded) .list,
+    .sidebar:not(.expanded) .footer {
+        display: none;
+    }
+
+    .sheet-handle {
+        display: block;
+        flex: 0 0 22px;
+        padding: 8px 0 4px;
+        text-align: center;
+        cursor: grab;
+        touch-action: none;
+    }
+
+    .sheet-handle::after {
+        content: "";
+        display: inline-block;
+        width: 42px;
+        height: 4px;
+        border-radius: 999px;
+        background: #555b63;
+    }
+
+    .header {
+        flex: 0 0 60px;
+        height: 60px;
+        min-height: 60px;
+        padding: 0 14px;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .logo {
+        gap: 9px;
+        min-width: 0;
+    }
+
+    .logo-icon {
+        width: 34px;
+        height: 34px;
+        font-size: 17px;
+    }
+
+    .logo-title {
+        font-size: 14px;
+        white-space: nowrap;
+    }
+
+    .logo-sub {
+        font-size: 9px;
+        white-space: nowrap;
+    }
+
+    .filters {
+        flex: 0 0 auto;
+        padding: 10px 12px;
+    }
+
+    .search {
+        min-height: 44px;
+        margin-bottom: 8px;
+    }
+
+    .filter-row {
+        gap: 8px;
+    }
+
+    select {
+        min-width: 0;
+        min-height: 44px;
+        padding: 8px;
+    }
+
+    .stats {
+        flex: 0 0 auto;
+        padding: 8px 12px;
+    }
+
+    .stat {
+        padding: 8px;
+    }
+
+    .stat-number {
+        font-size: 17px;
+    }
+
+    .legend {
+        flex: 0 0 auto;
+        max-height: 68px;
+        overflow-y: auto;
+        padding-bottom: 8px;
+    }
+
+    .list {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .footer {
+        flex: 0 0 auto;
+        padding-bottom: calc(8px + env(safe-area-inset-bottom));
+    }
+
+    .incident {
+        padding: 14px 15px;
+        min-height: 78px;
+    }
+
+    .incident-top {
+        align-items: flex-start;
+    }
+
+    .incident-type {
+        font-size: 14px;
+    }
+
+    .incident-location {
+        font-size: 12px;
+    }
+
+    .incident-meta {
+        font-size: 10px;
+    }
+
+    .map-controls {
+        top: calc(10px + env(safe-area-inset-top));
+        right: calc(10px + env(safe-area-inset-right));
+        left: auto;
+        gap: 6px;
+    }
+
+    .map-button {
+        min-height: 44px;
+        padding: 9px 11px;
+        font-size: 12px;
+        border-radius: 9px;
+    }
+
+    .leaflet-control-zoom {
+        margin-top: calc(62px + env(safe-area-inset-top)) !important;
+    }
+
+    .popup {
+        min-width: 0;
+        max-width: calc(100vw - 48px);
+    }
+}
+
+@media(max-width:390px) {
+    .live {
+        display: none;
+    }
+
+    .logo-sub {
+        max-width: 240px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .map-button {
+        padding: 9px 10px;
+    }
+}
+
+@media(min-width:601px) and (max-width:800px) {
+    .sidebar {
+        width: 330px;
+        min-width: 330px;
+    }
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="app">
+
+
+<!-- ======================================================
+     SIDEBAR
+     ====================================================== -->
+
+<div class="sidebar" id="sidebar">
+
+
+    <div class="sheet-handle" id="sheetHandle"></div>
+
+
+    <div class="header" id="sheetHeader">
+
+        <div class="logo">
+
+            <div class="logo-icon">
+                ◉
+            </div>
+
+            <div>
+
+                <div class="logo-title">
+                    VENTURA COUNTY CAD
+                </div>
+
+                <div class="logo-sub">
+                    VCFD + CALIFORNIA HIGHWAY PATROL
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="live">
+
+            <div
+                class="live-dot"
+                id="liveDot">
+            </div>
+
+            <span id="liveText">
+                LIVE
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- FILTERS -->
+
+    <div class="filters">
+
+        <input
+            id="search"
+            class="search"
+            placeholder="Search incidents..."
+        >
+
+
+        <div class="filter-row">
+
+            <select id="agency">
+
+                <option value="ALL">
+                    All Agencies
+                </option>
+
+                <option value="VCFD">
+                    VCFD
+                </option>
+
+                <option value="CHP">
+                    CHP
+                </option>
+
+            </select>
+
+
+            <select id="category">
+
+                <option value="ALL">
+                    All Types
+                </option>
+
+                <option value="Medical">
+                    Medical
+                </option>
+
+                <option value="Fire">
+                    Fire
+                </option>
+
+                <option value="Traffic">
+                    Traffic
+                </option>
+
+                <option value="Rescue">
+                    Rescue
+                </option>
+
+                <option value="Hazmat">
+                    Hazmat
+                </option>
+
+                <option value="Other">
+                    Other
+                </option>
+
+            </select>
+
+        </div>
+
+    </div>
+
+
+    <!-- STATS -->
+
+    <div class="stats">
+
+        <div class="stat">
+
+            <div
+                class="stat-number"
+                id="total">
+                0
+            </div>
+
+            <div class="stat-label">
+                TOTAL
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div
+                class="stat-number"
+                id="vcfd">
+                0
+            </div>
+
+            <div class="stat-label">
+                VCFD
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div
+                class="stat-number"
+                id="chp">
+                0
+            </div>
+
+            <div class="stat-label">
+                CHP
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- LEGEND -->
+
+    <div class="legend" id="legend"></div>
+
+
+    <!-- INCIDENT LIST -->
+
+    <div
+        class="list"
+        id="incidentList">
+    </div>
+
+
+    <!-- STATUS -->
+
+    <div class="footer">
+
+        <div>
+            DATA FEEDS
+        </div>
+
+
+        <div class="feed">
+
+            <div class="feed-left">
+
+                <span
+                    class="feed-dot feed-bad"
+                    id="vcfdDot">
+                </span>
+
+                VCFD
+
+            </div>
+
+            <span id="vcfdStatus">
+                OFFLINE
+            </span>
+
+        </div>
+
+
+        <div class="feed">
+
+            <div class="feed-left">
+
+                <span
+                    class="feed-dot feed-bad"
+                    id="chpDot">
+                </span>
+
+                CHP
+
+            </div>
+
+            <span id="chpStatus">
+                OFFLINE
+            </span>
+
+        </div>
+
+
+        <div
+            style="margin-top:7px"
+            id="updated">
+            Waiting for update...
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ======================================================
+     MAP
+     ====================================================== -->
+
+<div class="map">
+
+    <div class="map-controls">
+
+        <button
+            class="map-button"
+            onclick="fitAll()">
+            Fit Calls
+        </button>
+
+        <button
+            class="map-button"
+            onclick="loadIncidents()">
+            ↻ Refresh
+        </button>
+
+    </div>
+
+
+    <div id="map"></div>
+
+</div>
+
+
+</div>
+
+
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+</script>
+
+
+<script
+    src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js">
+</script>
+
+
+<script>
+
+/* ============================================================
+   CAD DATA ENGINE
+   ------------------------------------------------------------
+   This replaces server.js entirely. It runs in the browser:
+   it tries to fetch the real CHP + VCFD feeds directly with
+   fetch(), and if a feed can't be reached (most likely because
+   media.chp.ca.gov / firefeeds.venturacounty.gov don't send
+   CORS headers, so the browser blocks the response) it falls
+   back to a self-updating in-memory simulation with the same
+   shape as the real data, so the dashboard always has
+   something live-feeling to show. No Node.js, no build step,
+   no server — just open this file or serve it as a static
+   page.
+   ============================================================ */
+
+const CHP_URL = "https://media.chp.ca.gov/sa_xml/sa.xml";
+const VCFD_URL = "https://firefeeds.venturacounty.gov/api/incidents";
+
+const FETCH_TIMEOUT_MS = 10000;
+
+// How often the demo simulation advances on its own, independent of any
+// UI polling. Incidents progress through their lifecycle and new ones
+// spawn even between refreshes, the same way a real CAD feed changes.
+const SIM_TICK_MS = 8000;
+
+// =====================================================
+// HELPER: fetch with timeout
+// =====================================================
+
+async function fetchWithTimeout(url) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+    try {
+        // NOTE: custom headers like User-Agent can't be set from browser
+        // JS (they're on the forbidden header list), so we just fetch
+        // plainly here. mode:"cors" makes the CORS failure explicit
+        // rather than silently returning an opaque response.
+        return await fetch(url, { signal: controller.signal, mode: "cors" });
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+async function fetchSource(name, url, parseAs, demoFallback) {
+    let response;
+
+    try {
+        response = await fetchWithTimeout(url);
+    } catch (err) {
+        const message = err.name === "AbortError" ? "Request timed out" : err.message;
+        console.warn(`${name} ERROR (fetch): ${message} - serving demo snapshot instead`);
+        return { data: demoFallback(), error: message, demo: true };
+    }
+
+    if (!response.ok) {
+        console.warn(`${name} returned HTTP ${response.status} - serving demo snapshot instead`);
+        return { data: demoFallback(), error: `HTTP ${response.status}`, demo: true };
+    }
+
+    try {
+        const data = parseAs === "json" ? await response.json() : await response.text();
+        console.log(`${name} loaded successfully`);
+        return { data, error: null, demo: false };
+    } catch (err) {
+        console.warn(`${name} returned invalid ${parseAs.toUpperCase()}: ${err.message} - serving demo snapshot instead`);
+        return { data: demoFallback(), error: err.message, demo: true };
+    }
+}
+
+// =====================================================
+// DEMO SIMULATION ENGINE
+//
+// Keeps live in-memory incident objects that age forward on a timer
+// (SIM_TICK_MS) and walk through the same status vocabulary a real
+// CHP/VCFD CAD operator would type: units go Enrt -> Onscene -> Code 4 /
+// Closed, detail lines get appended with real timestamps, and new
+// incidents spawn while stale ones roll off.
+// =====================================================
+
+// All 24 CHP communications/dispatch centers statewide (source:
+// cad.chp.ca.gov CHP Area Offices by Dispatch Center listing), so the
+// simulation spawns calls from the whole state, not just a few centers.
+const CHP_CENTERS = {
+    HBCC: "Humboldt Dispatch Center",
+    RDCC: "Redding Dispatch Center",
+    SUCC: "Susanville Dispatch Center",
+    YKCC: "Yreka Dispatch Center",
+    UKCC: "Ukiah Dispatch Center",
+    SACC: "Sacramento Communications Center",
+    TKCC: "Truckee Dispatch Center",
+    CHCC: "Chico Dispatch Center",
+    SKCC: "Stockton Dispatch Center",
+    GGCC: "Golden Gate Communications Center",
+    BKCC: "Bakersfield Dispatch Center",
+    FRCC: "Fresno Dispatch Center",
+    MRCC: "Merced Dispatch Center",
+    LACC: "Los Angeles Communications Center",
+    BCCC: "Border Communications Center",
+    ECCC: "El Centro Dispatch Center",
+    INCC: "Indio Dispatch Center",
+    OCCC: "Orange County Communications Center",
+    MOCC: "Monterey Dispatch Center",
+    SLCC: "San Luis Obispo Dispatch Center",
+    VTCC: "Ventura Dispatch Center",
+    ICCC: "Inland Communications Center",
+    BPCC: "Bishop Dispatch Center",
+    BSCC: "Barstow Dispatch Center",
+};
+
+const CHP_TEMPLATES = [
+    {
+        type: "Trfc Collision-1141 Enrt", weight: 3, minPhases: 4, maxPhases: 6,
+        phaseUnits: ["1141 Enrt", "1141 Enrt", "Onscene", "Code 4", "Closed"],
+        detailPool: ["1141 Enrt", "Amr Enrt", "Trfc Adv Rqst", "2 Veh Invl", "1183 Enrt", "Rp Statement Only", "Code 4 At Scene"],
+    },
+    {
+        type: "Trfc Collision-Unkn Inj", weight: 2, minPhases: 4, maxPhases: 6,
+        phaseUnits: ["Enrt", "1141 Enrt", "Onscene", "Amr Enrt", "Closed"],
+        detailPool: ["Amr Enrt", "1183 Enrt", "1141 Enrt", "Trfc Adv Rqst", "Unkn Inj Reported", "Code 4 At Scene"],
+    },
+    {
+        type: "Trfc Collision-No Inj", weight: 3, minPhases: 3, maxPhases: 4,
+        phaseUnits: ["Enrt", "Onscene", "Closed"],
+        detailPool: ["Info Only", "Rp Statement Only", "Both Veh Moved To Shldr", "Code 4 At Scene"],
+    },
+    {
+        type: "SIG Alert", weight: 1, minPhases: 4, maxPhases: 6,
+        phaseUnits: ["Enrt", "Onscene", "Sig Alert Issued", "Rt Lns Reopened", "Closed"],
+        detailPool: ["Sig Alert Issued", "2 Rt Lns Blkd", "Caltrans Enrt", "Rt Lns Reopened", "Code 4 At Scene"],
+    },
+    {
+        type: "Traffic Hazard", weight: 3, minPhases: 3, maxPhases: 5,
+        phaseUnits: ["Enrt", "Onscene", "Closed"],
+        detailPool: ["Debris In Rdwy", "Requesting Caltrans", "1141 Enrt Non Injury", "Hazard Removed"],
+    },
+    {
+        type: "Vehicle Fire", weight: 1, minPhases: 4, maxPhases: 5,
+        phaseUnits: ["Enrt", "Onscene", "Fd Enrt", "Closed"],
+        detailPool: ["Vcfd Enrt", "Veh Fully Involved", "Fire Out", "1 Rt Lane Blkd"],
+    },
+    {
+        type: "Hit and Run No Injuries", weight: 1, minPhases: 3, maxPhases: 4,
+        phaseUnits: ["Enrt", "Onscene", "Closed"],
+        detailPool: ["Susp Veh Info Given", "Rp Statement Only", "Code 4 At Scene"],
+    },
+    {
+        type: "Animal Hazard", weight: 1, minPhases: 2, maxPhases: 3,
+        phaseUnits: ["Enrt", "Closed"],
+        detailPool: ["Livestock In Rdwy", "Animal Cleared From Rdwy"],
+    },
+    {
+        type: "Assist CT w/Trfc Ctrl", weight: 1, minPhases: 3, maxPhases: 5,
+        phaseUnits: ["Enrt", "Onscene", "Closed"],
+        detailPool: ["1 Way Traffic Ctrl", "Caltrans Onscene", "Trfc Ctrl Released"],
+    },
+    {
+        type: "Trfc Collision-1182 (Tow)", weight: 1, minPhases: 3, maxPhases: 4,
+        phaseUnits: ["Enrt", "1183 Enrt", "Closed"],
+        detailPool: ["1183 Enrt", "Veh Blocking Lane", "Veh Removed"],
+    },
+];
+
+// Real locations spread across every one of the 24 CHP centers above, so
+// incidents spawn statewide instead of clustering around just Ventura/LA.
+const CHP_LOCATIONS = [
+    // Humboldt (HBCC)
+    { center: "HBCC", loc: "US-101 N / Broadway", desc: "Eureka", area: "Eureka", lat: 40.8021, lon: -124.1637 },
+    { center: "HBCC", loc: "US-101 S / Redwood Dr", desc: "Garberville", area: "Garberville", lat: 40.0996, lon: -123.7042 },
+    { center: "HBCC", loc: "US-101 N / Elk Valley Rd", desc: "Crescent City", area: "Crescent City", lat: 41.7558, lon: -124.2026 },
+    // Redding (RDCC)
+    { center: "RDCC", loc: "I-5 N / Cypress Ave", desc: "Redding", area: "Redding", lat: 40.5865, lon: -122.3917 },
+    { center: "RDCC", loc: "SR-36 E / Main St", desc: "Red Bluff", area: "Red Bluff", lat: 40.1785, lon: -122.2358 },
+    { center: "RDCC", loc: "SR-299 W / Trinity River Bridge", desc: "Weaverville", area: "Trinity River", lat: 40.7331, lon: -122.9439 },
+    // Susanville (SUCC)
+    { center: "SUCC", loc: "US-395 N / Richmond Rd", desc: "Susanville", area: "Susanville", lat: 40.4163, lon: -120.6530 },
+    { center: "SUCC", loc: "US-395 N / Center St", desc: "Alturas", area: "Alturas", lat: 41.4871, lon: -120.5427 },
+    { center: "SUCC", loc: "SR-70 E / Bucks Lake Rd", desc: "Quincy", area: "Quincy", lat: 39.9366, lon: -120.9477 },
+    // Yreka (YKCC)
+    { center: "YKCC", loc: "I-5 N / Miner St", desc: "Yreka", area: "Yreka", lat: 41.7295, lon: -122.6346 },
+    { center: "YKCC", loc: "I-5 S / Lake St", desc: "Mt. Shasta", area: "Mt. Shasta", lat: 41.3099, lon: -122.3106 },
+    // Ukiah (UKCC)
+    { center: "UKCC", loc: "US-101 N / Perkins St", desc: "Ukiah", area: "Ukiah", lat: 39.1502, lon: -123.2078 },
+    { center: "UKCC", loc: "SR-53 N / Hwy 20", desc: "Clearlake", area: "Clearlake", lat: 38.9582, lon: -122.6264 },
+    // Sacramento (SACC)
+    { center: "SACC", loc: "I-80 E / Foresthill Ave", desc: "Auburn", area: "Auburn", lat: 38.8966, lon: -121.0768 },
+    { center: "SACC", loc: "I-5 N / Del Paso Rd", desc: "North Sacramento", area: "Sacramento", lat: 38.6270, lon: -121.4530 },
+    { center: "SACC", loc: "US-50 E / Bradshaw Rd", desc: "South Sacramento", area: "Sacramento", lat: 38.5566, lon: -121.3891 },
+    { center: "SACC", loc: "I-5 N / Kelley Ave", desc: "Woodland", area: "Woodland", lat: 38.6785, lon: -121.7733 },
+    { center: "SACC", loc: "SR-49 N / Idaho Maryland Rd", desc: "Grass Valley", area: "Grass Valley", lat: 39.2191, lon: -121.0611 },
+    { center: "SACC", loc: "US-50 E / Missouri Flat Rd", desc: "Placerville", area: "Placerville", lat: 38.7296, lon: -120.7985 },
+    // Truckee (TKCC)
+    { center: "TKCC", loc: "I-80 W / Donner Pass Rd", desc: "Truckee", area: "Truckee", lat: 39.3280, lon: -120.1833 },
+    { center: "TKCC", loc: "US-50 W / Lake Tahoe Blvd", desc: "South Lake Tahoe", area: "South Lake Tahoe", lat: 38.9399, lon: -119.9772 },
+    // Chico (CHCC)
+    { center: "CHCC", loc: "SR-99 N / East Ave", desc: "Chico", area: "Chico", lat: 39.7285, lon: -121.8375 },
+    { center: "CHCC", loc: "SR-70 S / Oro Dam Blvd", desc: "Oroville", area: "Oroville", lat: 39.5138, lon: -121.5564 },
+    { center: "CHCC", loc: "SR-20 W / Colusa Hwy", desc: "Yuba City", area: "Yuba City", lat: 39.1404, lon: -121.6169 },
+    // Stockton (SKCC)
+    { center: "SKCC", loc: "SR-99 S / Hammer Ln", desc: "Stockton", area: "Stockton", lat: 37.9577, lon: -121.2908 },
+    { center: "SKCC", loc: "I-580 E / MacArthur Dr", desc: "Tracy", area: "Tracy", lat: 37.7397, lon: -121.4252 },
+    { center: "SKCC", loc: "SR-49 S / Mountain Ranch Rd", desc: "San Andreas", area: "San Andreas", lat: 38.1963, lon: -120.6799 },
+    // Golden Gate (GGCC)
+    { center: "GGCC", loc: "US-101 N / 19th Ave", desc: "San Francisco", area: "San Francisco", lat: 37.7749, lon: -122.4194 },
+    { center: "GGCC", loc: "I-880 N / 29th Ave", desc: "Oakland", area: "Oakland", lat: 37.8044, lon: -122.2712 },
+    { center: "GGCC", loc: "US-101 S / Julian St", desc: "San Jose", area: "San Jose", lat: 37.3382, lon: -121.8863 },
+    { center: "GGCC", loc: "SR-29 N / Trancas St", desc: "Napa", area: "Napa", lat: 38.2975, lon: -122.2869 },
+    { center: "GGCC", loc: "US-101 N / Steele Ln", desc: "Santa Rosa", area: "Santa Rosa", lat: 38.4404, lon: -122.7141 },
+    { center: "GGCC", loc: "I-880 S / A St", desc: "Hayward", area: "Hayward", lat: 37.6688, lon: -122.0808 },
+    // Bakersfield (BKCC)
+    { center: "BKCC", loc: "SR-99 N / Rosedale Hwy", desc: "Bakersfield", area: "Bakersfield", lat: 35.3987, lon: -119.0691 },
+    { center: "BKCC", loc: "SR-58 E / Cottonwood Rd", desc: "Bakersfield", area: "Bakersfield", lat: 35.3384, lon: -118.9548 },
+    { center: "BKCC", loc: "I-5 N / Grapevine", desc: "Fort Tejon", area: "Grapevine", lat: 34.9515, lon: -118.9370 },
+    // Fresno (FRCC)
+    { center: "FRCC", loc: "SR-99 N / Herndon Ave", desc: "Fresno", area: "Fresno", lat: 36.7378, lon: -119.7871 },
+    { center: "FRCC", loc: "SR-198 E / Akers St", desc: "Visalia", area: "Visalia", lat: 36.3302, lon: -119.2921 },
+    { center: "FRCC", loc: "SR-198 W / 11th Ave", desc: "Hanford", area: "Hanford", lat: 36.3274, lon: -119.6457 },
+    // Merced (MRCC)
+    { center: "MRCC", loc: "SR-99 S / Childs Ave", desc: "Merced", area: "Merced", lat: 37.3022, lon: -120.4830 },
+    { center: "MRCC", loc: "SR-99 N / Kansas Ave", desc: "Modesto", area: "Modesto", lat: 37.6391, lon: -120.9969 },
+    { center: "MRCC", loc: "SR-99 N / Ave 12", desc: "Madera", area: "Madera", lat: 36.9613, lon: -120.0607 },
+    // Los Angeles (LACC)
+    { center: "LACC", loc: "US-101 N / Topanga Canyon Blvd", desc: "Woodland Hills", area: "Woodland Hills", lat: 34.1684, lon: -118.6058 },
+    { center: "LACC", loc: "I-405 S / Sunset Blvd", desc: "Sherman Oaks", area: "Sherman Oaks", lat: 34.0980, lon: -118.4707 },
+    { center: "LACC", loc: "I-5 N / San Fernando Rd", desc: "Santa Clarita", area: "Santa Clarita", lat: 34.3917, lon: -118.5426 },
+    { center: "LACC", loc: "SR-14 N / Ave I", desc: "Lancaster", area: "Antelope Valley", lat: 34.6868, lon: -118.1542 },
+    { center: "LACC", loc: "I-605 N / Ramona Blvd", desc: "Baldwin Park", area: "Baldwin Park", lat: 34.0853, lon: -117.9609 },
+    { center: "LACC", loc: "I-105 E / Bloomfield Ave", desc: "Santa Fe Springs", area: "Santa Fe Springs", lat: 33.9473, lon: -118.0862 },
+    // Border (BCCC)
+    { center: "BCCC", loc: "I-5 N / Sea World Dr", desc: "San Diego", area: "San Diego", lat: 32.7157, lon: -117.1611 },
+    { center: "BCCC", loc: "I-5 S / Oceanside Blvd", desc: "Oceanside", area: "Oceanside", lat: 33.1959, lon: -117.3795 },
+    { center: "BCCC", loc: "I-8 E / 2nd St", desc: "El Cajon", area: "El Cajon", lat: 32.7948, lon: -116.9625 },
+    { center: "BCCC", loc: "I-15 S / Rancho California Rd", desc: "Temecula", area: "Temecula", lat: 33.4936, lon: -117.1484 },
+    // El Centro (ECCC)
+    { center: "ECCC", loc: "I-8 E / Imperial Ave", desc: "El Centro", area: "El Centro", lat: 32.7920, lon: -115.5631 },
+    { center: "ECCC", loc: "I-8 E / 4th Ave", desc: "Winterhaven", area: "Winterhaven", lat: 32.7431, lon: -114.6427 },
+    // Indio (INCC)
+    { center: "INCC", loc: "I-10 E / Jefferson St", desc: "Indio", area: "Indio", lat: 33.7206, lon: -116.2156 },
+    { center: "INCC", loc: "I-10 E / Lovekin Blvd", desc: "Blythe", area: "Blythe", lat: 33.6103, lon: -114.5883 },
+    // Orange County (OCCC)
+    { center: "OCCC", loc: "I-5 N / 17th St", desc: "Santa Ana", area: "Santa Ana", lat: 33.7455, lon: -117.8677 },
+    { center: "OCCC", loc: "I-5 S / Ortega Hwy", desc: "San Juan Capistrano", area: "Capistrano", lat: 33.5017, lon: -117.6625 },
+    { center: "OCCC", loc: "I-405 S / Westminster Blvd", desc: "Westminster", area: "Westminster", lat: 33.7514, lon: -117.9940 },
+    // Monterey (MOCC)
+    { center: "MOCC", loc: "SR-1 S / Munras Ave", desc: "Monterey", area: "Monterey", lat: 36.6002, lon: -121.8947 },
+    { center: "MOCC", loc: "SR-1 N / Bay St", desc: "Santa Cruz", area: "Santa Cruz", lat: 36.9741, lon: -122.0308 },
+    { center: "MOCC", loc: "US-101 S / Broadway", desc: "King City", area: "King City", lat: 36.2127, lon: -121.1266 },
+    // San Luis Obispo (SLCC)
+    { center: "SLCC", loc: "US-101 N / Marsh St", desc: "San Luis Obispo", area: "San Luis Obispo", lat: 35.2828, lon: -120.6596 },
+    { center: "SLCC", loc: "US-101 N / Betteravia Rd", desc: "Santa Maria", area: "Santa Maria", lat: 34.9530, lon: -120.4357 },
+    { center: "SLCC", loc: "US-101 S / SR-246", desc: "Buellton", area: "Buellton", lat: 34.6136, lon: -120.1927 },
+    // Ventura (VTCC)
+    { center: "VTCC", loc: "US-101 N / Victoria Ave", desc: "Ventura", area: "Ventura", lat: 34.2805, lon: -119.2434 },
+    { center: "VTCC", loc: "SR-118 E / Kuehner Dr", desc: "Simi Valley", area: "Simi Valley", lat: 34.2703, lon: -118.7654 },
+    { center: "VTCC", loc: "US-101 S / Rice Ave", desc: "Oxnard", area: "Oxnard", lat: 34.2242, lon: -119.1631 },
+    { center: "VTCC", loc: "SR-126 E / Old Telegraph Rd", desc: "Fillmore", area: "Fillmore", lat: 34.3992, lon: -118.9184 },
+    { center: "VTCC", loc: "SR-33 N / Baldwin Rd", desc: "Ojai", area: "Ojai", lat: 34.4482, lon: -119.2438 },
+    { center: "VTCC", loc: "US-101 N / Milpas St", desc: "Santa Barbara", area: "Santa Barbara", lat: 34.4187, lon: -119.6889 },
+    { center: "VTCC", loc: "US-101 S / Lynn Rd", desc: "Thousand Oaks", area: "Conejo", lat: 34.1706, lon: -118.8376 },
+    // Inland (ICCC)
+    { center: "ICCC", loc: "I-215 N / Base Line St", desc: "San Bernardino", area: "San Bernardino", lat: 34.1083, lon: -117.2898 },
+    { center: "ICCC", loc: "SR-91 W / University Ave", desc: "Riverside", area: "Riverside", lat: 33.9533, lon: -117.3962 },
+    { center: "ICCC", loc: "I-15 N / Foothill Blvd", desc: "Rancho Cucamonga", area: "Rancho Cucamonga", lat: 34.1064, lon: -117.5931 },
+    // Bishop (BPCC)
+    { center: "BPCC", loc: "US-395 N / Line St", desc: "Bishop", area: "Bishop", lat: 37.3636, lon: -118.3954 },
+    { center: "BPCC", loc: "US-395 N / Twin Lakes Rd", desc: "Bridgeport", area: "Bridgeport", lat: 38.2555, lon: -119.2288 },
+    { center: "BPCC", loc: "SR-14 N / Sierra Hwy", desc: "Mojave", area: "Mojave", lat: 35.0530, lon: -118.1717 },
+    // Barstow (BSCC)
+    { center: "BSCC", loc: "I-15 N / Main St", desc: "Barstow", area: "Barstow", lat: 34.8958, lon: -117.0173 },
+    { center: "BSCC", loc: "I-15 N / Bear Valley Rd", desc: "Victorville", area: "Victorville", lat: 34.5362, lon: -117.2928 },
+    { center: "BSCC", loc: "US-95 S / J St", desc: "Needles", area: "Needles", lat: 34.8481, lon: -114.6141 },
+];
+
+const VCFD_TEMPLATES = [
+    { type: "Structure Fire", weight: 1, phases: ["Dispatched", "Enroute", "Onscene", "Working Fire", "Under Control", "Closed"], units: "E1, T1, BC1" },
+    { type: "Vegetation Fire", weight: 1, phases: ["Dispatched", "Enroute", "Onscene", "Contained", "Closed"], units: "E4, E9, WT2" },
+    { type: "Medical Aid", weight: 4, phases: ["Dispatched", "Enroute", "Onscene", "Transporting", "Closed"], units: "M12" },
+    { type: "Traffic Collision", weight: 2, phases: ["Dispatched", "Enroute", "Onscene", "Closed"], units: "E41, M41" },
+    { type: "Vehicle Fire", weight: 1, phases: ["Dispatched", "Enroute", "Onscene", "Extinguished", "Closed"], units: "E42" },
+    { type: "Alarm Activation", weight: 2, phases: ["Dispatched", "Enroute", "Investigating", "Closed"], units: "E2" },
+    { type: "Public Assist", weight: 1, phases: ["Dispatched", "Enroute", "Onscene", "Closed"], units: "E15" },
+];
+
+const VCFD_LOCATIONS = [
+    { block: "800", address: "E Main St", city: "Ventura", lat: 34.2789, lon: -119.2932 },
+    { block: "1200", address: "Foothill Rd", city: "Ventura", lat: 34.3241, lon: -119.2477 },
+    { block: "300", address: "Rose Ave", city: "Oxnard", lat: 34.1976, lon: -119.1771 },
+    { block: "2100", address: "Los Angeles Ave", city: "Simi Valley", lat: 34.2699, lon: -118.7481 },
+    { block: "500", address: "Broadway", city: "Moorpark", lat: 34.2833, lon: -118.8811 },
+    { block: "150", address: "Ventura Ave", city: "Camarillo", lat: 34.2164, lon: -119.0376 },
+    { block: "900", address: "Telephone Rd", city: "Ventura", lat: 34.2652, lon: -119.2159 },
+    { block: "6500", address: "Ojai Ave", city: "Ojai", lat: 34.4480, lon: -119.2426 },
+    { block: "400", address: "Channel Islands Blvd", city: "Oxnard", lat: 34.1611, lon: -119.2076 },
+    { block: "1900", address: "Erringer Rd", city: "Simi Valley", lat: 34.2568, lon: -118.7581 },
+];
+
+function pickWeighted(templates) {
+    const total = templates.reduce((sum, t) => sum + t.weight, 0);
+    let roll = Math.random() * total;
+    for (const t of templates) {
+        roll -= t.weight;
+        if (roll <= 0) return t;
+    }
+    return templates[templates.length - 1];
+}
+
+function toChpLatLon(lat, lon) {
+    return `${Math.round(lat * 1e6)}:${Math.round(Math.abs(lon) * 1e6)}`;
+}
+
+function fmtChpTime(ms) {
+    const d = new Date(ms);
+    const pad = (n) => String(n).padStart(2, "0");
+    const hours24 = d.getHours();
+    const hours12 = ((hours24 + 11) % 12) + 1;
+    const ampm = hours24 >= 12 ? "PM" : "AM";
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return `${months[d.getMonth()]} ${d.getDate()} ${d.getFullYear()} ${hours12}:${pad(d.getMinutes())}${ampm}`;
+}
+
+// -----------------------------------------------------
+// Simulation state
+// -----------------------------------------------------
+const sim = {
+    chpIncidents: new Map(),
+    vcfdIncidents: new Map(),
+    nextChpId: 4000,
+    nextVcfdId: 20000,
+};
+
+function spawnChpIncident(now) {
+    const template = pickWeighted(CHP_TEMPLATES);
+    const spot = CHP_LOCATIONS[Math.floor(Math.random() * CHP_LOCATIONS.length)];
+    const phaseCount = template.minPhases + Math.floor(Math.random() * (template.maxPhases - template.minPhases + 1));
+    const id = `${spot.center}-${sim.nextChpId++}`;
+
+    const incident = {
+        id,
+        center: spot.center,
+        type: template.type,
+        loc: spot.loc,
+        desc: spot.desc,
+        area: spot.area,
+        lat: spot.lat + (Math.random() - 0.5) * 0.004,
+        lon: spot.lon + (Math.random() - 0.5) * 0.004,
+        createdAt: now,
+        lastUpdate: now,
+        phase: 0,
+        phaseCount,
+        status: template.phaseUnits[0] || "Enrt",
+        closed: false,
+        closedAt: null,
+        details: [{ time: fmtChpTime(now), text: template.detailPool[0] || template.phaseUnits[0] }],
+        template,
+    };
+
+    sim.chpIncidents.set(id, incident);
+}
+
+function spawnVcfdIncident(now) {
+    const template = pickWeighted(VCFD_TEMPLATES);
+    const spot = VCFD_LOCATIONS[Math.floor(Math.random() * VCFD_LOCATIONS.length)];
+    const id = String(sim.nextVcfdId++);
+
+    const incident = {
+        id,
+        type: template.type,
+        block: spot.block,
+        address: spot.address,
+        city: spot.city,
+        lat: spot.lat + (Math.random() - 0.5) * 0.004,
+        lon: spot.lon + (Math.random() - 0.5) * 0.004,
+        createdAt: now,
+        lastUpdate: now,
+        phase: 0,
+        status: template.phases[0],
+        units: template.units,
+        closed: false,
+        closedAt: null,
+        template,
+    };
+
+    sim.vcfdIncidents.set(id, incident);
+}
+
+function tickSimulation() {
+    const now = Date.now();
+
+    for (const incident of sim.chpIncidents.values()) {
+        if (incident.closed) continue;
+        if (Math.random() < 0.55) {
+            incident.phase += 1;
+            incident.lastUpdate = now;
+            const units = incident.template.phaseUnits;
+            const nextStatus = units[Math.min(incident.phase, units.length - 1)];
+            incident.status = nextStatus;
+
+            const detailChoice = incident.template.detailPool[
+                Math.floor(Math.random() * incident.template.detailPool.length)
+            ];
+            incident.details.unshift({ time: fmtChpTime(now), text: detailChoice });
+            if (incident.details.length > 6) incident.details.length = 6;
+
+            if (incident.phase >= incident.phaseCount || nextStatus === "Closed") {
+                incident.closed = true;
+                incident.closedAt = now;
+                incident.status = "Closed";
+            }
+        }
+    }
+
+    for (const incident of sim.vcfdIncidents.values()) {
+        if (incident.closed) continue;
+        if (Math.random() < 0.5) {
+            incident.phase += 1;
+            incident.lastUpdate = now;
+            const phases = incident.template.phases;
+            incident.status = phases[Math.min(incident.phase, phases.length - 1)];
+            if (incident.phase >= phases.length - 1) {
+                incident.closed = true;
+                incident.closedAt = now;
+            }
+        }
+    }
+
+    for (const [id, incident] of sim.chpIncidents) {
+        if (incident.closed && now - incident.closedAt > 6 * 60000) sim.chpIncidents.delete(id);
+    }
+    for (const [id, incident] of sim.vcfdIncidents) {
+        if (incident.closed && now - incident.closedAt > 6 * 60000) sim.vcfdIncidents.delete(id);
+    }
+
+    const activeChp = [...sim.chpIncidents.values()].filter((i) => !i.closed).length;
+    if (activeChp < 60 && Math.random() < 0.65) spawnChpIncident(now);
+
+    const activeVcfd = [...sim.vcfdIncidents.values()].filter((i) => !i.closed).length;
+    if (activeVcfd < 10 && Math.random() < 0.4) spawnVcfdIncident(now);
+}
+
+function seedSimulation() {
+    const now = Date.now();
+    for (let i = 0; i < 40; i++) spawnChpIncident(now);
+    for (let i = 0; i < 6; i++) spawnVcfdIncident(now);
+    for (let i = 0; i < 10; i++) tickSimulation();
+}
+
+function renderDemoCHPXml() {
+    const byCenter = {};
+    for (const incident of sim.chpIncidents.values()) {
+        if (!byCenter[incident.center]) byCenter[incident.center] = [];
+        byCenter[incident.center].push(incident);
+    }
+
+    const dispatchBlocks = Object.entries(byCenter).map(([centerId, incidents]) => {
+        const logs = incidents.map((inc) => {
+            const details = inc.details
+                .map((d) => `<details><DetailTime>${d.time}</DetailTime><IncidentDetail>"${d.text}"</IncidentDetail></details>`)
+                .join("");
+            return `<Log ID="${inc.id}">
+      <LogTime>${fmtChpTime(inc.createdAt)}</LogTime>
+      <LogType>${inc.type}</LogType>
+      <Location>${inc.loc}</Location>
+      <LocationDesc>${inc.desc}</LocationDesc>
+      <Area>${inc.area}</Area>
+      <LATLON>${toChpLatLon(inc.lat, inc.lon)}</LATLON>
+      <LogDetails>${details}</LogDetails>
+      <units><UnitTime>${fmtChpTime(inc.lastUpdate)}</UnitTime><UnitDetail>${inc.status}</UnitDetail></units>
+    </Log>`;
+        }).join("\n");
+
+        return `  <Dispatch ID="${centerId}">
+    <Center>${CHP_CENTERS[centerId] || centerId}</Center>
+    ${logs}
+  </Dispatch>`;
+    }).join("\n");
+
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<CenterList>
+${dispatchBlocks}
+</CenterList>`;
+}
+
+function renderDemoVCFDJson() {
+    return [...sim.vcfdIncidents.values()].map((inc) => ({
+        incidentNumber: `VC-${new Date(inc.createdAt).getFullYear()}-${inc.id}`,
+        incidentType: inc.type,
+        // ISO string so Date.parse() works reliably in every browser
+        responseDate: new Date(inc.createdAt).toISOString(),
+        block: inc.block,
+        address: inc.address,
+        city: inc.city,
+        latitude: inc.lat,
+        longitude: inc.lon,
+        status: inc.status,
+        units: inc.units,
+    }));
+}
+
+seedSimulation();
+setInterval(tickSimulation, SIM_TICK_MS);
+
+// =====================================================
+// CHP XML PARSING (real feed and demo feed share this schema)
+// =====================================================
+
+function parseChpXml(xmlText) {
+    const result = [];
+
+    try {
+        const doc = new DOMParser().parseFromString(xmlText, "text/xml");
+        if (doc.querySelector("parsererror")) {
+            console.warn("CHP XML failed to parse");
+            return result;
+        }
+
+        for (const dispatch of doc.getElementsByTagName("Dispatch")) {
+            const centerEl = dispatch.getElementsByTagName("Center")[0];
+            const center = centerEl ? centerEl.textContent.trim() : "";
+
+            for (const log of dispatch.getElementsByTagName("Log")) {
+                const get = (tag) => {
+                    const el = log.getElementsByTagName(tag)[0];
+                    return el ? el.textContent.trim() : "";
+                };
+
+                const id = log.getAttribute("ID") || "";
+                const latlon = get("LATLON");
+
+                let lat = null;
+                let lon = null;
+                if (latlon.includes(":")) {
+                    const [rawLat, rawLon] = latlon.split(":");
+                    const latNum = parseFloat(rawLat);
+                    const lonNum = parseFloat(rawLon);
+                    if (Number.isFinite(latNum) && Number.isFinite(lonNum)) {
+                        lat = latNum / 1e6;
+                        lon = -Math.abs(lonNum) / 1e6;
+                    }
+                }
+
+                const details = [];
+                for (const d of log.getElementsByTagName("details")) {
+                    const dt = d.getElementsByTagName("DetailTime")[0];
+                    const dd = d.getElementsByTagName("IncidentDetail")[0];
+                    details.push({
+                        time: dt ? dt.textContent.trim() : "",
+                        text: dd ? dd.textContent.trim().replace(/^"|"$/g, "") : "",
+                    });
+                }
+
+                const unitEls = log.getElementsByTagName("units");
+                let status = "";
+                if (unitEls.length) {
+                    const lastUnit = unitEls[unitEls.length - 1];
+                    const ud = lastUnit.getElementsByTagName("UnitDetail")[0];
+                    status = ud ? ud.textContent.trim() : "";
+                }
+
+                result.push({
+                    id,
+                    center,
+                    logTime: get("LogTime"),
+                    logType: get("LogType"),
+                    location: get("Location"),
+                    locationDesc: get("LocationDesc"),
+                    area: get("Area"),
+                    lat,
+                    lon,
+                    details,
+                    status,
+                });
+            }
+        }
+    } catch (err) {
+        console.error("Failed to parse CHP XML:", err);
+    }
+
+    return result;
+}
+
+// =====================================================
+// CATEGORY CLASSIFICATION (heuristic, based on incident type text)
+// =====================================================
+
+function classify(rawType) {
+    const t = (rawType || "").toLowerCase();
+    if (t.includes("animal")) return "Other";
+    if (t.includes("fire")) return "Fire";
+    if (t.includes("medical") || t.includes(" aid")) return "Medical";
+    if (t.includes("hazmat") || t.includes("spill")) return "Hazmat";
+    if (
+        t.includes("trfc") ||
+        t.includes("traffic") ||
+        t.includes("collision") ||
+        t.includes("sig alert") ||
+        t.includes("hit and run") ||
+        t.includes("1182")
+    ) return "Traffic";
+    if (t.includes("rescue") || t.includes("public assist")) return "Rescue";
+    return "Other";
+}
+
+// =====================================================
+// NORMALIZE INTO THE SHAPE THE UI RENDERS
+// =====================================================
+
+function normalizeChp(item) {
+    return {
+        id: "CHP-" + item.id,
+        source: "CHP",
+        type: item.logType || "Unknown",
+        category: classify(item.logType),
+        location: item.location + (item.locationDesc ? ` (${item.locationDesc})` : ""),
+        city: item.area,
+        latitude: item.lat,
+        longitude: item.lon,
+        status: item.status || "Unknown",
+        time: item.logTime,
+        incidentNumber: item.id,
+        units: item.status ? [item.status] : [],
+        comment: item.details && item.details.length ? item.details[0].text : "",
+    };
+}
+
+function normalizeVcfd(item) {
+    return {
+        id: "VCFD-" + (item.incidentNumber || item.id || Math.random().toString(36).slice(2)),
+        source: "VCFD",
+        type: item.incidentType || item.type || "Unknown",
+        category: classify(item.incidentType || item.type),
+        location: [item.block, item.address].filter(Boolean).join(" "),
+        city: item.city,
+        latitude: Number(item.latitude),
+        longitude: Number(item.longitude),
+        status: item.status || "Unknown",
+        time: item.responseDate,
+        incidentNumber: item.incidentNumber,
+        units: item.units ? String(item.units).split(",").map((s) => s.trim()).filter(Boolean) : [],
+        comment: "",
+    };
+}
+
+// =====================================================
+// PUBLIC ENTRY POINT — this is what the UI calls instead of
+// fetch("/api/incidents")
+// =====================================================
+
+async function getIncidents() {
+    const [chpResult, vcfdResult] = await Promise.all([
+        fetchSource("CHP", CHP_URL, "text", renderDemoCHPXml),
+        fetchSource("VCFD", VCFD_URL, "json", renderDemoVCFDJson),
+    ]);
+
+    const chpIncidents = parseChpXml(chpResult.data).map(normalizeChp);
+    const vcfdRaw = Array.isArray(vcfdResult.data) ? vcfdResult.data : [];
+    const vcfdIncidents = vcfdRaw.map(normalizeVcfd);
+
+    return {
+        incidents: [...vcfdIncidents, ...chpIncidents],
+        status: {
+            vcfd: true, // data is always available (real or demo fallback)
+            chp: true,
+            vcfdMethod: vcfdResult.demo ? "DEMO" : "LIVE",
+            chpMethod: chpResult.demo ? "DEMO" : "LIVE",
+        },
+        updated: Date.now(),
+    };
+}
+
+</script>
+
+
+<script>
+
+
+// ==========================================================
+// MOBILE BOTTOM SHEET
+//
+// On narrow screens the sidebar becomes a bottom sheet (see the
+// max-width:600px CSS) that opens collapsed - just the header and
+// stats peeking over the map - so the map is the primary view.
+// Tapping the drag handle or header expands it to browse the full
+// incident list, and tapping again (or picking an incident) collapses
+// it back down so the map is visible again.
+// ==========================================================
+
+const sidebarEl = document.getElementById("sidebar");
+const sheetHandleEl = document.getElementById("sheetHandle");
+const sheetHeaderEl = document.getElementById("sheetHeader");
+
+function isMobileLayout() {
+    return window.matchMedia("(max-width: 600px)").matches;
+}
+
+function toggleSheet(forceState) {
+    if (!isMobileLayout()) return;
+
+    const shouldExpand =
+        typeof forceState === "boolean"
+            ? forceState
+            : !sidebarEl.classList.contains("expanded");
+
+    sidebarEl.classList.toggle("expanded", shouldExpand);
+
+    // Leaflet measures its container when it initializes. Give the sheet
+    // animation a moment to finish, then force a map resize.
+    setTimeout(() => map.invalidateSize({ animate: false }), 320);
+}
+
+sheetHeaderEl.addEventListener("click", (event) => {
+    if (event.target.closest("input, select, button")) return;
+    toggleSheet();
+});
+
+sheetHandleEl.addEventListener("click", () => toggleSheet());
+
+let dragStartY = null;
+let dragStartExpanded = false;
+
+sheetHandleEl.addEventListener("pointerdown", (event) => {
+    if (!isMobileLayout()) return;
+    dragStartY = event.clientY;
+    dragStartExpanded = sidebarEl.classList.contains("expanded");
+    sheetHandleEl.setPointerCapture?.(event.pointerId);
+});
+
+sheetHandleEl.addEventListener("pointerup", (event) => {
+    if (!isMobileLayout() || dragStartY === null) return;
+
+    const distance = event.clientY - dragStartY;
+
+    if (Math.abs(distance) > 28) {
+        toggleSheet(distance < 0);
+    } else {
+        toggleSheet(!dragStartExpanded);
+    }
+
+    dragStartY = null;
+});
+
+sheetHandleEl.addEventListener("pointercancel", () => {
+    dragStartY = null;
+});
+
+window.addEventListener("resize", () => {
+    if (!isMobileLayout()) {
+        sidebarEl.classList.remove("expanded");
+    }
+    setTimeout(() => map.invalidateSize({ animate: false }), 100);
+});
+
+//
+// Markers/badges are colored by incident category (Medical,
+// Fire, Traffic, Rescue, Hazmat, Other) rather than just by
+// agency - this is far more useful at a glance since both
+// VCFD and CHP report several of the same categories.
+// ==========================================================
+
+const CATEGORY_COLORS = {
+
+    Medical:
+        "#2ecc71",
+
+    Fire:
+        "#e74c3c",
+
+    Traffic:
+        "#3498db",
+
+    Rescue:
+        "#9b59b6",
+
+    Hazmat:
+        "#f1c40f",
+
+    Other:
+        "#8899a6"
+
+};
+
+
+function categoryColor(call) {
+
+    return (
+        CATEGORY_COLORS[call.category] ||
+        CATEGORY_COLORS.Other
+    );
+
+}
+
+
+function buildLegend() {
+
+    const legend =
+        document.getElementById(
+            "legend"
+        );
+
+
+    legend.innerHTML =
+        Object.entries(CATEGORY_COLORS)
+            .map(([label, color]) => `
+
+                <div class="legend-item">
+
+                    <span
+                        class="legend-dot"
+                        style="background:${color}">
+                    </span>
+
+                    ${label}
+
+                </div>
+
+            `)
+            .join("");
+
+}
+
+
+// ==========================================================
+// MAP
+// ==========================================================
+
+const map =
+    L.map("map")
+     .setView(
+        [37.0, -119.5],
+        6
+     );
+
+
+// Satellite imagery base layer (Esri World Imagery)
+L.tileLayer(
+    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    {
+
+        maxZoom: 19,
+
+        attribution:
+            "Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community"
+
+    }
+).addTo(map);
+
+
+// Thin labels + roads overlay on top of the imagery so street names,
+// highway numbers, and city labels stay legible over the satellite base.
+L.tileLayer(
+    "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+    {
+
+        maxZoom: 19
+
+    }
+).addTo(map);
+
+
+// Marker cluster group
+
+const markerGroup =
+    L.markerClusterGroup({
+
+        showCoverageOnHover:
+            false,
+
+        maxClusterRadius:
+            45
+
+    });
+
+
+map.addLayer(
+    markerGroup
+);
+
+
+let incidents = [];
+
+let markers = new Map();
+
+
+// ==========================================================
+// ICONS
+//
+// Fill color = incident category. Ring style tells you the
+// agency at a glance: solid white ring = VCFD, dashed ring =
+// CHP (matches the "on-freeway" nature of most CHP calls).
+// ==========================================================
+
+function iconFor(call) {
+
+    const color =
+        categoryColor(call);
+
+
+    const border =
+        call.source === "VCFD"
+            ? "3px solid white"
+            : "3px dashed white";
+
+
+    return L.divIcon({
+
+        className: "",
+
+        html: `
+
+            <div style="
+                width:20px;
+                height:20px;
+                border-radius:50%;
+                background:${color};
+                border:${border};
+                box-shadow:0 1px 8px #000;
+            "></div>
+
+        `,
+
+        iconSize:
+            [20,20],
+
+        iconAnchor:
+            [10,10]
+
+    });
+
+}
+
+
+// ==========================================================
+// TIME FORMATTING
+// ==========================================================
+
+function parseIncidentTime(value) {
+
+    if (!value) {
+        return NaN;
+    }
+
+
+    // CHP times look like "Aug 20 2026 1:42PM" - missing the
+    // space before AM/PM breaks JS's date parser.
+
+    const normalized =
+        String(value)
+            .replace(
+                /(\d)(AM|PM)$/i,
+                "$1 $2"
+            );
+
+
+    return Date.parse(
+        normalized
+    );
+
+}
+
+
+function timeAgo(value) {
+
+    const ts =
+        parseIncidentTime(
+            value
+        );
+
+
+    if (!Number.isFinite(ts)) {
+        return "";
+    }
+
+
+    const diffMs =
+        Date.now() - ts;
+
+    const diffMin =
+        Math.round(
+            diffMs / 60000
+        );
+
+
+    if (diffMin < 1) {
+        return "just now";
+    }
+
+    if (diffMin < 60) {
+        return `${diffMin}m ago`;
+    }
+
+
+    const diffHr =
+        Math.round(
+            diffMin / 60
+        );
+
+
+    if (diffHr < 24) {
+        return `${diffHr}h ago`;
+    }
+
+
+    const diffDay =
+        Math.round(
+            diffHr / 24
+        );
+
+
+    return `${diffDay}d ago`;
+
+}
+
+
+// ==========================================================
+// ESCAPE HTML
+// ==========================================================
+
+function escapeHTML(value) {
+
+    return String(value ?? "")
+        .replace(
+            /[&<>"']/g,
+            c => ({
+
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#039;"
+
+            })[c]
+        );
+
+}
+
+
+// ==========================================================
+// FILTER
+// ==========================================================
+
+function getFiltered() {
+
+    const agency =
+        document.getElementById(
+            "agency"
+        ).value;
+
+
+    const category =
+        document.getElementById(
+            "category"
+        ).value;
+
+
+    const search =
+        document.getElementById(
+            "search"
+        ).value
+        .toLowerCase()
+        .trim();
+
+
+    return incidents.filter(call => {
+
+        if (
+            agency !== "ALL" &&
+            call.source !== agency
+        ) {
+            return false;
+        }
+
+
+        if (
+            category !== "ALL" &&
+            call.category !== category
+        ) {
+            return false;
+        }
+
+
+        if (search) {
+
+            const text =
+                [
+
+                    call.type,
+                    call.location,
+                    call.city,
+                    call.incidentNumber,
+                    call.comment,
+                    ...(call.units || [])
+
+                ]
+                .join(" ")
+                .toLowerCase();
+
+
+            if (!text.includes(search)) {
+                return false;
+            }
+
+        }
+
+
+        return true;
+
+    });
+
+}
+
+
+// ==========================================================
+// DRAW MAP
+// ==========================================================
+
+function drawMap() {
+
+    markerGroup.clearLayers();
+
+    markers.clear();
+
+
+    const calls =
+        getFiltered();
+
+
+    calls.forEach(call => {
+
+        if (
+            !Number.isFinite(
+                call.latitude
+            ) ||
+            !Number.isFinite(
+                call.longitude
+            )
+        ) {
+
+            return;
+
+        }
+
+
+        const marker =
+            L.marker(
+
+                [
+                    call.latitude,
+                    call.longitude
+                ],
+
+                {
+                    icon:
+                        iconFor(call)
+                }
+
+            );
+
+
+        marker.bindPopup(`
+
+            <div class="popup">
+
+                <div class="popup-title">
+
+                    ${escapeHTML(
+                        call.type
+                    )}
+
+                </div>
+
+
+                <div class="popup-row">
+                    <strong>Agency:</strong>
+                    ${escapeHTML(
+                        call.source
+                    )}
+                </div>
+
+
+                <div class="popup-row">
+                    <strong>Incident:</strong>
+                    ${escapeHTML(
+                        call.incidentNumber
+                    )}
+                </div>
+
+
+                <div class="popup-row">
+                    <strong>Location:</strong>
+                    ${escapeHTML(
+                        call.location
+                    )}
+                </div>
+
+
+                <div class="popup-row">
+                    <strong>Area:</strong>
+                    ${escapeHTML(
+                        call.city
+                    )}
+                </div>
+
+
+                <div class="popup-row">
+                    <strong>Status:</strong>
+                    ${escapeHTML(
+                        call.status
+                    )}
+                </div>
+
+
+                <div class="popup-row">
+                    <strong>Reported:</strong>
+                    ${escapeHTML(
+                        call.time
+                    )}
+                    ${
+                        timeAgo(call.time)
+                        ?
+                        ` (${escapeHTML(timeAgo(call.time))})`
+                        :
+                        ""
+                    }
+                </div>
+
+
+                ${
+                    call.units?.length
+                    ?
+                    `
+                    <div class="popup-row">
+                        <strong>Units:</strong>
+                        ${escapeHTML(
+                            call.units.join(", ")
+                        )}
+                    </div>
+                    `
+                    :
+                    ""
+                }
+
+
+                ${
+                    call.comment
+                    ?
+                    `
+                    <div class="popup-row">
+                        <strong>Details:</strong>
+                        ${escapeHTML(
+                            call.comment
+                        )}
+                    </div>
+                    `
+                    :
+                    ""
+                }
+
+            </div>
+
+        `);
+
+
+        marker.on(
+            "click",
+            () => {
+
+                highlightIncident(
+                    call.id
+                );
+
+            }
+        );
+
+
+        markerGroup.addLayer(
+            marker
+        );
+
+
+        markers.set(
+            call.id,
+            marker
+        );
+
+    });
+
+}
+
+
+// ==========================================================
+// INCIDENT LIST
+// ==========================================================
+
+function drawList() {
+
+    const list =
+        document.getElementById(
+            "incidentList"
+        );
+
+
+    const calls =
+        getFiltered();
+
+
+    list.innerHTML = "";
+
+
+    if (!calls.length) {
+
+        list.innerHTML = `
+
+            <div style="
+                padding:30px;
+                text-align:center;
+                color:#777;
+                font-size:12px;
+            ">
+
+                No incidents found.
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    calls.forEach(call => {
+
+        const element =
+            document.createElement(
+                "div"
+            );
+
+
+        element.className =
+            "incident";
+
+
+        element.dataset.id =
+            call.id;
+
+
+        const ago =
+            timeAgo(call.time);
+
+
+        element.innerHTML = `
+
+            <div class="incident-top">
+
+                <span class="
+                    badge
+                    ${
+                        call.source === "VCFD"
+                            ? "badge-vcfd"
+                            : "badge-chp"
+                    }
+                ">
+
+                    ${escapeHTML(
+                        call.source
+                    )}
+
+                </span>
+
+
+                <span style="
+                    color:#777;
+                    font-size:9px;
+                ">
+
+                    ${escapeHTML(
+                        ago || call.time
+                    )}
+
+                </span>
+
+            </div>
+
+
+            <div class="incident-type">
+
+                <span
+                    class="type-dot"
+                    style="background:${categoryColor(call)}">
+                </span>
+
+                ${escapeHTML(
+                    call.type
+                )}
+
+            </div>
+
+
+            <div class="incident-location">
+
+                ${escapeHTML(
+                    call.location
+                )}
+
+            </div>
+
+
+            <div class="incident-meta">
+
+                <span>
+
+                    ${escapeHTML(
+                        call.city
+                    )}
+
+                </span>
+
+
+                <span>
+
+                    ${escapeHTML(
+                        call.incidentNumber
+                    )}
+
+                </span>
+
+            </div>
+
+        `;
+
+
+        element.onclick =
+            () => {
+
+                focusIncident(
+                    call
+                );
+
+            };
+
+
+        list.appendChild(
+            element
+        );
+
+    });
+
+}
+
+
+// ==========================================================
+// FOCUS INCIDENT
+// ==========================================================
+
+function focusIncident(call) {
+
+    // On mobile, collapse the sheet so the map (and the marker/popup
+    // we're about to open) is actually visible instead of staying
+    // hidden behind the expanded list.
+    toggleSheet(false);
+
+
+    if (
+        !Number.isFinite(
+            call.latitude
+        ) ||
+        !Number.isFinite(
+            call.longitude
+        )
+    ) {
+
+        highlightIncident(
+            call.id
+        );
+
+        return;
+
+    }
+
+
+    map.setView(
+        [
+            call.latitude,
+            call.longitude
+        ],
+        15
+    );
+
+
+    const marker =
+        markers.get(
+            call.id
+        );
+
+
+    if (marker) {
+
+        markerGroup.zoomToShowLayer(
+            marker,
+            () => {
+
+                marker.openPopup();
+
+            }
+        );
+
+    }
+
+
+    highlightIncident(
+        call.id
+    );
+
+}
+
+
+// ==========================================================
+// HIGHLIGHT LIST ITEM
+// ==========================================================
+
+function highlightIncident(id) {
+
+    document
+        .querySelectorAll(
+            ".incident"
+        )
+        .forEach(element => {
+
+            element.classList.toggle(
+                "active",
+                element.dataset.id === id
+            );
+
+        });
+
+}
+
+
+// ==========================================================
+// FIT ALL
+// ==========================================================
+
+function fitAll() {
+
+    const layers =
+        markerGroup.getLayers();
+
+
+    if (!layers.length) {
+        return;
+    }
+
+
+    map.fitBounds(
+        markerGroup.getBounds(),
+        {
+            padding:
+                [30,30]
+        }
+    );
+
+}
+
+
+// ==========================================================
+// STATISTICS
+// ==========================================================
+
+function updateStats() {
+
+    const calls =
+        getFiltered();
+
+
+    document.getElementById(
+        "total"
+    ).textContent =
+        calls.length;
+
+
+    document.getElementById(
+        "vcfd"
+    ).textContent =
+        incidents.filter(
+            x => x.source === "VCFD"
+        ).length;
+
+
+    document.getElementById(
+        "chp"
+    ).textContent =
+        incidents.filter(
+            x => x.source === "CHP"
+        ).length;
+
+}
+
+
+// ==========================================================
+// FEED STATUS
+// ==========================================================
+
+function setFeedStatus(
+    element,
+    dot,
+    online,
+    text
+) {
+
+    document.getElementById(
+        element
+    ).textContent =
+        text;
+
+
+    const d =
+        document.getElementById(
+            dot
+        );
+
+
+    d.className =
+        "feed-dot " +
+        (
+            online
+                ? "feed-ok"
+                : "feed-bad"
+        );
+
+}
+
+
+// ==========================================================
+// LOAD DATA
+//
+// This now calls the in-browser CAD data engine (getIncidents,
+// defined above) directly instead of fetching from a Node
+// server - there is no server anymore.
+// ==========================================================
+
+async function loadIncidents() {
+
+    try {
+
+        const data =
+            await getIncidents();
+
+
+        incidents =
+            data.incidents || [];
+
+
+        drawMap();
+
+        drawList();
+
+        updateStats();
+
+
+        // --------------------------
+        // Feed status
+        // --------------------------
+
+        setFeedStatus(
+            "vcfdStatus",
+            "vcfdDot",
+            data.status.vcfdMethod !== "DEMO",
+            data.status.vcfdMethod === "DEMO"
+                ? "DEMO"
+                : "LIVE"
+        );
+
+
+        setFeedStatus(
+            "chpStatus",
+            "chpDot",
+            data.status.chpMethod !== "DEMO",
+            data.status.chpMethod === "DEMO"
+                ? "DEMO"
+                : "LIVE"
+        );
+
+
+        // --------------------------
+        // Header
+        // --------------------------
+
+        document.getElementById(
+            "liveDot"
+        ).style.background =
+            "#36c275";
+
+
+        document.getElementById(
+            "liveText"
+        ).textContent =
+            "LIVE";
+
+
+        // --------------------------
+        // Updated
+        // --------------------------
+
+        document.getElementById(
+            "updated"
+        ).textContent =
+            "Updated " +
+            new Date(
+                data.updated
+            ).toLocaleTimeString();
+
+
+    }
+
+    catch(error) {
+
+        console.error(
+            "Unable to load incidents:",
+            error
+        );
+
+        document.getElementById(
+            "liveText"
+        ).textContent =
+            "ERROR";
+
+    }
+
+}
+
+
+// ==========================================================
+// FILTER EVENTS
+// ==========================================================
+
+document.getElementById(
+    "agency"
+).addEventListener(
+    "change",
+    () => {
+
+        drawMap();
+        drawList();
+        updateStats();
+
+    }
+);
+
+
+document.getElementById(
+    "category"
+).addEventListener(
+    "change",
+    () => {
+
+        drawMap();
+        drawList();
+        updateStats();
+
+    }
+);
+
+
+document.getElementById(
+    "search"
+).addEventListener(
+    "input",
+    () => {
+
+        drawMap();
+        drawList();
+        updateStats();
+
+    }
+);
+
+
+// ==========================================================
+// INITIAL LOAD
+// ==========================================================
+
+buildLegend();
+
+loadIncidents();
+
+
+// ==========================================================
+// AUTO REFRESH
+// ==========================================================
+//
+// Refresh incidents every 60s, and re-render the list every
+// 15s on its own so the "Xm ago" timestamps stay fresh even
+// between fetches.
+
+setInterval(
+    loadIncidents,
+    60000
+);
+
+
+setInterval(
+    drawList,
+    15000
+);
+
+</script>
+
+
+</body>
+
+</html>
